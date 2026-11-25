@@ -9,6 +9,8 @@ const search = document.querySelector('#search');
 const statusFilter = document.querySelector('#filter-status');
 const categoryFilter = document.querySelector('#filter-category');
 
+const priorityFilter = document.querySelector('#filter-priority');
+
 const statusLabels = { new: 'Новая', in_progress: 'В работе', resolved: 'Завершена' };
 const priorityLabels = { low: 'Низкий', medium: 'Средний', high: 'Высокий' };
 const categoryLabels = { hardware: 'Оборудование', software: 'ПО', network: 'Сеть' };
@@ -20,7 +22,8 @@ async function loadTickets() {
     const query = new URLSearchParams({
       search: search.value,
       status: statusFilter.value,
-      category: categoryFilter.value
+      category: categoryFilter.value,
+      priority: priorityFilter.value
     });
     const response = await fetch(`/api/tickets?${query.toString()}`);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -29,18 +32,25 @@ async function loadTickets() {
     listMessage.textContent = '';
     count.textContent = String(data.total);
 
-    list.innerHTML = data.items.map((ticket) => {
+    const rows = data.items.map((ticket) => {
       const nextStatus = ticket.status === 'new' ? 'in_progress' : 'resolved';
       const action = ticket.status === 'resolved' ? '' :
         `<button data-id="${ticket.id}" data-next="${nextStatus}">${ticket.status === 'new' ? 'В работу' : 'Завершить'}</button>`;
-      return `<li class="ticket" data-testid="ticket-item" data-id="${ticket.id}">
-        <h3 class="ticket-title">${ticket.title}</h3>
-        <p class="ticket-description">${ticket.description}</p>
+      const row = document.createElement('li');
+      row.className = 'ticket';
+      row.dataset.testid = 'ticket-item';
+      row.dataset.id = ticket.id;
+      row.innerHTML = `
+        <h3 class="ticket-title"></h3>
+        <p class="ticket-description"></p>
         <div class="ticket-meta"><span>${categoryLabels[ticket.category]}</span>
           <span>${priorityLabels[ticket.priority]}</span><span>${statusLabels[ticket.status]}</span></div>
-        ${action}
-      </li>`;
-    }).join('');
+        ${action}`;
+      row.querySelector('.ticket-title').textContent = ticket.title;
+      row.querySelector('.ticket-description').textContent = ticket.description;
+      return row;
+    });
+    list.replaceChildren(...rows);
     if (data.total === 0) list.textContent = 'Заявок по заданным условиям нет.';
   } catch (_) {
     if (requestId !== lastRequest) return;
@@ -86,5 +96,5 @@ list.addEventListener('click', async (event) => {
   await loadTickets();
 });
 
-[search, statusFilter, categoryFilter].forEach((element) => element.addEventListener('input', loadTickets));
+[search, statusFilter, categoryFilter, priorityFilter].forEach((element) => element.addEventListener('input', loadTickets));
 loadTickets();
