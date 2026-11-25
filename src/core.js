@@ -39,9 +39,8 @@ function validateTicketInput(input) {
 
 function canChangeStatus(from, to) {
   if (!STATUSES.includes(from) || !STATUSES.includes(to)) return false;
-  if (from === 'new') return to === 'in_progress';
-  if (from === 'in_progress') return to === 'resolved';
-  return false;
+  return (from === 'new' && to === 'in_progress') ||
+    (from === 'in_progress' && to === 'resolved');
 }
 
 /**

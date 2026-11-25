@@ -2,5 +2,8 @@ node_modules/
 coverage/
 cypress/screenshots/
 cypress/videos/
+.npm-cache/
+.cypress-cache/
+test-server.log
 .DS_Store
 .env
